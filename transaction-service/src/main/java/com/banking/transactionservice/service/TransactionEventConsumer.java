@@ -1,4 +1,4 @@
-package com.banking.transactionservice.service;
+ package com.banking.transactionservice.service;
 
 import com.banking.transactionservice.entity.Transaction;
 import com.banking.transactionservice.entity.TransactionStatus;
@@ -21,6 +21,7 @@ public class TransactionEventConsumer {
 
     private final TransactionRepository transactionRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TransactionService transactionService;
     private static final long OTP_EXPIRY_MINUTES = 5;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -32,7 +33,7 @@ public class TransactionEventConsumer {
      * Generate OTP and ask user to verify
      * @param payload
      */
-    @KafkaListener(topics = TRANSACTION_OTP_GENERATED_TOPIC)
+    @KafkaListener(topics = "verification.required")
     public void consumeVerificationRequired(
             @Payload Map<String, Object> payload){
         try{
@@ -50,7 +51,7 @@ public class TransactionEventConsumer {
                     ));
 
             // Now we need to add Idempotency guard
-            // in order to prevent duplicate credits to my receiver or to my sender
+            // in order to prevent duplicate credits to receiver or sender
             // We are verifying the user only if the transaction status is in "PROCESSING"
             if(transaction.getStatus() != TransactionStatus.PROCESSING){
                 log.warn("Transaction {} not PROCESSING - skipping",transactionId);
@@ -85,6 +86,24 @@ public class TransactionEventConsumer {
         }
         catch (Exception e) {
             log.error("Error handling verification required: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Consume fraud.check.clean
+     * Completes the transaction
+     * @param payload
+     */
+    @KafkaListener(topics = "fraud.check.clean")
+    public void consumeFraudCheckCleanResult(
+            @Payload Map<String, Object> payload){
+        try{
+
+            String transactionId = (String) payload.get("transactionId");
+            transactionService.processCleanResult(transactionId);
+        }
+        catch (Exception e){
+            log.error("Error processing fraud check result: {}", e.getMessage());
         }
     }
 }

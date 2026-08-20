@@ -47,7 +47,7 @@ public class Account {
     private AccountType accountType;
 
     @Column(nullable = false)
-    private AccountStatus accountStatus;
+    private AccountStatus status;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance;

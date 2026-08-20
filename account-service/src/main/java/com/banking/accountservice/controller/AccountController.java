@@ -32,21 +32,21 @@ public class AccountController {
             @Valid @RequestBody CreateAccountRequest request){
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(accountService(createAccount(request)));
+                .body(accountService.createAccount(request));
     }
 
     @GetMapping("/{accountNumber}")
     public ResponseEntity<AccountResponse> getAccount(
             @PathVariable String accountNumber){
 
-        return ResponseEntity.ok(accountService.getAccount(AccountNumber));
+        return ResponseEntity.ok(accountService.getAccount(accountNumber));
     }
 
     @GetMapping("/{accountNumber}/balance")
     public ResponseEntity<BigDecimal> getBalance(
             @PathVariable String accountNumber){
 
-        return ResponseEntity.ok(accountService.getBalance(AccountNumber));
+        return ResponseEntity.ok(accountService.getBalance(accountNumber));
     }
 
     @PutMapping("/{accountNumber}/block")

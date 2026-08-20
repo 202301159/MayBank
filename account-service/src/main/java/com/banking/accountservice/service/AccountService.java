@@ -34,7 +34,7 @@ public class AccountService {
         account.setEmail(request.getEmail());
         account.setPhone(request.getPhone());
         account.setAccountType(request.getAccountType());
-        account.setAccountStatus(AccountStatus.ACTIVE);
+        account.setStatus(AccountStatus.ACTIVE);
         account.setBalance(request.getInitialDeposit());
         account.setAccountNumber(generateAccountNumber());
         account.setDailyTransactionLimit(

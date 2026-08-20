@@ -6,6 +6,7 @@ import com.banking.transactionservice.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class TransactionEventConsumer {
      * Generate OTP and ask user to verify
      * @param payload
      */
+    @KafkaListener(topics = TRANSACTION_OTP_GENERATED_TOPIC)
     public void consumeVerificationRequired(
             @Payload Map<String, Object> payload){
         try{
@@ -44,7 +46,8 @@ public class TransactionEventConsumer {
 
             Transaction transaction = transactionRepository.findById(transactionId)
                     .orElseThrow(() -> new RuntimeException(
-                            "Transaction not found"+transactionId));
+                            "Transaction not found"+transactionId
+                    ));
 
             // Now we need to add Idempotency guard
             // in order to prevent duplicate credits to my receiver or to my sender
@@ -65,7 +68,7 @@ public class TransactionEventConsumer {
             transaction.setStatus(TransactionStatus.PENDING_VERIFICATION);
             transactionRepository.save(transaction);
 
-            log.info("OTP generated for transactrion {} expires in {} min",
+            log.info("OTP generated for transaction {} expires in {} min",
                     transactionId, OTP_EXPIRY_MINUTES);
 
             // Notify user (Publish an event - "transaction.otp.generated" to Kafka)
